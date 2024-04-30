@@ -20,19 +20,21 @@ interface DragLineOption {
 }
 
 interface CallbackInfo {
-    answer_all_sum: number;
-    answer_current_sum: number;
-    answer_current?: string;
-    answer_state?: boolean;
-    answer_all_state?: boolean;
+  answer_all_sum: number;
+  answer_current_sum: number;
+  answer_current?: string;
+  answer_state?: boolean;
+  answer_all_state?: boolean;
 }
 
 class DragLine {
   private id: string;
   private doc: Document;
   private wrap: HTMLElement;
-  private items: NodeListOf<HTMLElement>;
-  private objects: NodeListOf<HTMLElement>;
+  /* eslint-disable */
+  private items: NodeListOf<HTMLButtonElement>;
+  private objects: NodeListOf<HTMLButtonElement>;
+  /* eslint-disable */
   private type: string;
   private wrap_t: number;
   private wrap_l: number;
@@ -52,8 +54,8 @@ class DragLine {
     this.id = opt.id;
     this.doc = document;
     this.wrap = document.querySelector<HTMLElement>(`[data-line-id="${this.id}"]`) as HTMLElement;
-    this.items = this.wrap.querySelectorAll<HTMLElement>(`[data-line-object], [data-line-target]`);
-    this.objects = this.wrap.querySelectorAll<HTMLElement>(`[data-line-object]`);
+    this.items = this.wrap.querySelectorAll<HTMLButtonElement>(`[data-line-object], [data-line-target]`);
+    this.objects = this.wrap.querySelectorAll<HTMLButtonElement>(`[data-line-object]`);
     this.type = this.wrap.dataset.lineType ? this.wrap.dataset.lineType : 'single';
 
     const wrapRect = this.wrap.getBoundingClientRect();
@@ -95,7 +97,7 @@ class DragLine {
         item.dataset.x = String(rect_item.left + item_w - this.wrap_l);
         item.dataset.y = String(rect_item.top + item_h - this.wrap_t);
       }
-     
+
     }
     set();
 
@@ -105,6 +107,7 @@ class DragLine {
     resizeObserver.observe(this.wrap);
 
     const actStart = (e: MouseEvent | TouchEvent): void => {
+      console.log('actStart', this.wrap.querySelector('svg'));
       this.wrap.querySelector('svg')?.insertAdjacentHTML('beforeend', `<line x1="0" x2="0" y1="0" y2="0" data-state="ing"></line>`);
       this.wrap_t = this.wrap.getBoundingClientRect().top;
       this.wrap_l = this.wrap.getBoundingClientRect().left;
@@ -122,8 +125,8 @@ class DragLine {
       const item_h = el_item.offsetHeight / 2;
       const x_value: string = (rect_item.left + item_w - this.wrap_l) + '';
       const y_value: string = (rect_item.top + item_h - this.wrap_t) + '';
-      let _x:number;
-      let _y:number;
+      let _x: number;
+      let _y: number;
 
       el_line.setAttribute('x1', x_value);
       el_line.setAttribute('y1', y_value);
@@ -131,6 +134,7 @@ class DragLine {
       el_line.setAttribute('y2', y_value);
 
       const actEnd = () => {
+        console.log('actEnd');
         const v_x = _x - this.wrap_l;
         const v_y = _y - this.wrap_t;
         let is_complete = false;
@@ -185,8 +189,8 @@ class DragLine {
             el_line.setAttribute('x2', (_rect_item.left + item_w - this.wrap_l) + '');
             el_line.setAttribute('y2', (_rect_item.top + item_h - this.wrap_t) + '');
             //정오답적용
-            const v1:string[] = value?.split(',')!;
-            const v2:string[] = _value?.split(',')!;
+            const v1: string[] = value?.split(',')!;
+            const v2: string[] = _value?.split(',')!;
             const is_OX = (v: boolean) => {
               if (v) {
                 el_line.dataset.answer = 'true';
@@ -226,7 +230,8 @@ class DragLine {
         });
         this.complete_n === this.n && this.completeCallback();
       }
-      const actMove = (e:any) => {
+      const actMove = (e: any) => {
+        console.log('actMove');
         _x = e.clientX ? e.clientX : e.targetTouches[0].clientX;
         _y = e.clientY ? e.clientY : e.targetTouches[0].clientY;
         el_line.setAttribute('x2', (_x - this.wrap_l) + '');
@@ -240,8 +245,8 @@ class DragLine {
     }
 
     this.items.forEach(item => {
-        item.addEventListener('mousedown', actStart);
-        item.addEventListener('touchstart', actStart, { passive: true });
+      item.addEventListener('mousedown', actStart);
+      item.addEventListener('touchstart', actStart, { passive: true });
     });
   }
   private completeCallback(): void {
@@ -299,29 +304,33 @@ class DragLine {
     this.completeCallback();
   }
 }
-const dragline = new DragLine({
-  id: 'test',
-  answer: 3,
-  callback: (v) => {
-    //개별 이벤트 완료 시
-    console.log('callback', v);
-  },
-  callbackComplete: (v) => {
-    //전체 이벤트 완료 시
-    console.log('callbackComplete', v);
-  },
-  callbackCheck: (v) => {
-    //체크 이벤트 실행 시
-    console.log('callbackCheck', v);
-  }
-});
- 
-dragline.init();
+
+
+setTimeout(() => {
+  const dragline = new DragLine({
+    id: 'test',
+    answer: 3,
+    callback: (v) => {
+      //개별 이벤트 완료 시
+      console.log('callback', v);
+    },
+    callbackComplete: (v) => {
+      //전체 이벤트 완료 시
+      console.log('callbackComplete', v);
+    },
+    callbackCheck: (v) => {
+      //체크 이벤트 실행 시
+      console.log('callbackCheck', v);
+    }
+  });
+  dragline.init();
+},1000 )
+
 </script>
 
 
+<style lang="scss">
 
-<style lang="scss" scoped>
 [data-line-id] {
   position: relative;
 
@@ -373,9 +382,6 @@ dragline.init();
     }
   }
 
-  &[data-state="complete"] {
-    //완료
-  }
 }
 
 [data-drag-id] {
